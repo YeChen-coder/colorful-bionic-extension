@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Bionic Reading</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌈 Colorful Bionic</h1>
+            <p>Make reading faster and more fun</p>
+        </div>
+        
+        <div class="main-toggle">
+            <label class="toggle-switch">
+                <input type="checkbox" id="bionicEnabled">
+                <span class="slider"></span>
+            </label>
+            <span class="toggle-label">Enable Colorful Bionic Reading</span>
+        </div>
+        
+        <div class="settings-panel" id="settingsPanel">
+            <!-- Bold Ratio Setting -->
+            <div class="setting-group">
+                <label for="boldRatio">Bold Ratio: <span id="boldRatioValue">50%</span></label>
+                <input type="range" id="boldRatio" min="20" max="80" value="50" class="slider-input">
+                <div class="range-labels">
+                    <span>Less</span>
+                    <span>More</span>
+                </div>
+            </div>
+            
+            <!-- Font Size Setting -->
+            <div class="setting-group">
+                <label for="fontSize">Font Size: <span id="fontSizeValue">110%</span></label>
+                <input type="range" id="fontSize" min="80" max="150" value="110" class="slider-input">
+                <div class="range-labels">
+                    <span>Small</span>
+                    <span>Large</span>
+                </div>
+            </div>
+            
+            <!-- Font Weight Setting -->
+            <div class="setting-group">
+                <label for="fontWeight">Font Weight: <span id="fontWeightValue">Bold</span></label>
+                <input type="range" id="fontWeight" min="400" max="900" step="100" value="700" class="slider-input">
+                <div class="range-labels">
+                    <span>Normal</span>
+                    <span>Ultra</span>
+                </div>
+            </div>
+            
+            <!-- Color Mode Selection -->
+            <div class="setting-group">
+                <label>Color Mode</label>
+                <div class="color-mode-tabs">
+                    <button class="mode-tab active" data-mode="rainbow">🌈 Rainbow</button>
+                    <button class="mode-tab" data-mode="single">🎨 Single</button>
+                    <button class="mode-tab" data-mode="custom">✨ Custom</button>
+                </div>
+            </div>
+            
+            <!-- Single Color Picker -->
+            <div class="setting-group color-setting" id="singleColorSetting" style="display: none;">
+                <label for="singleColor">Choose Color</label>
+                <div class="color-input-wrapper">
+                    <input type="color" id="singleColor" value="#3366ff">
+                    <span class="color-preview" id="singleColorPreview"></span>
+                </div>
+            </div>
+            
+            <!-- Custom Colors Setting -->
+            <div class="setting-group color-setting" id="customColorSetting" style="display: none;">
+                <label>Custom Color Palette</label>
+                <div class="color-palette" id="customColorPalette">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                <button class="add-color-btn" id="addColorBtn">+ Add Color</button>
+            </div>
+            
+            <!-- Color Intensity Setting -->
+            <div class="setting-group">
+                <label for="colorIntensity">Color Intensity: <span id="colorIntensityValue">70%</span></label>
+                <input type="range" id="colorIntensity" min="30" max="100" value="70" class="slider-input">
+                <div class="range-labels">
+                    <span>Light</span>
+                    <span>Dark</span>
+                </div>
+            </div>
+            
+            <!-- Preview Section -->
+            <div class="setting-group">
+                <label>Preview</label>
+                <div class="preview-text" id="previewText">
+                    This is a sample text to preview the colorful bionic reading effect. You can see how different words are highlighted with various colors.
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <button class="reset-btn" id="resetBtn">Reset to Default</button>
+            <div class="version">v1.0.0</div>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+/* Colorful Bionic Reading Styles for Web Pages */
+
+/* Base bionic reading styles */
+.bionic-processed {
+    display: contents;
+}
+
+.bionic-bold {
+    font-weight: bold !important;
+    transition: color 0.2s ease, font-size 0.2s ease;
+    display: inline;
+}
+
+.bionic-normal {
+    font-weight: inherit;
+    color: inherit;
+    display: inline;
+}
+
+/* Ensure bionic text doesn't break layout */
+.bionic-processed * {
+    display: inline;
+    line-height: inherit;
+    font-family: inherit;
+}
+
+/* Prevent text selection issues */
+.bionic-processed {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+}
+
+/* Ensure font size changes don't break line height */
+.bionic-bold {
+    vertical-align: baseline;
+    line-height: 1;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .bionic-bold {
+        filter: brightness(0.8);
+        font-weight: 900 !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .bionic-bold {
+        transition: none;
+    }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+    .bionic-bold {
+        filter: brightness(1.2) saturate(1.1);
+    }
+}
+
+/* Print styles */
+@media print {
+    .bionic-bold {
+        color: #000000 !important;
+        font-weight: bold !important;
+        font-size: 1em !important;
+        text-shadow: none !important;
+    }
+    
+    .bionic-normal {
+        color: #000000 !important;
+    }
+}
