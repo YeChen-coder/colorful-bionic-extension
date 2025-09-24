@@ -1,4 +1,5 @@
 **Edge extension - Colorful bionic rading**
+
 Download from store: in process
 
 
@@ -37,4 +38,11 @@ Colorful Bionic Reading transforms any webpage by highlighting the first part of
 - Works completely offline
 - Lightweight and secure
 
-Install now and experience the future of comfortable, colorful reading!
+## Installation
+1. Download or clone this repository
+2. Open Edge browser
+3. Go to `edge://extensions/`
+4. Enable Developer mode
+5. Click "Load unpacked" and select the extension folder
+
+I
