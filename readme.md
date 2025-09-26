@@ -1,6 +1,6 @@
 **Edge extension - Colorful bionic rading**
 
-Download from store: in process
+Download from store: https://microsoftedge.microsoft.com/addons/detail/colorful-bionic-reading/camgbnhlhdempnekobebpmdhechifjni
 
 
 
@@ -44,5 +44,3 @@ Colorful Bionic Reading transforms any webpage by highlighting the first part of
 3. Go to `edge://extensions/`
 4. Enable Developer mode
 5. Click "Load unpacked" and select the extension folder
-
-I

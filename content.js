@@ -1,4 +1,4 @@
-// Content script for Colorful Bionic Reading - Performance Optimized
+// Content script for Colorful Bionic Reading - Fixed Version
 let bionicApplied = false;
 let currentSettings = {
     boldRatio: 50,
@@ -17,10 +17,10 @@ let colorIndex = 0;
 let processingTimeout = null;
 let isProcessing = false;
 
-// Performance optimization constants
-const MAX_TEXT_NODES = 1000; // Limit the number of text nodes to process
-const MIN_WORD_LENGTH = 3; // Only process words longer than 3 characters
-const BATCH_SIZE = 50; // Batch size for processing nodes
+// Performance optimization constants - Adjust these values to improve coverage
+const MAX_TEXT_NODES = 2000; // Increased to 2000 nodes
+const MIN_WORD_LENGTH = 2; // Reduced to 2 characters
+const BATCH_SIZE = 100; // Increased batch size
 
 function getNextColor() {
     let colors;
@@ -30,7 +30,6 @@ function getNextColor() {
         case 'custom':
             colors = currentSettings.customColors;
             if (!colors || colors.length === 0) {
-                // If custom colors are empty, fallback to rainbow mode
                 colors = currentSettings.rainbowColors;
             }
             break;
@@ -72,29 +71,30 @@ function applyBionicToWord(word) {
 }
 
 function processBionicText(text) {
-    // Simplified text processing - only handle alphanumeric words
-    return text.replace(/\b[a-zA-Z0-9]{3,}\b/g, function(word) {
+    // Process more types of words, including shorter words
+    return text.replace(/\b[a-zA-Z0-9]{2,}\b/g, function(word) {
         return applyBionicToWord(word);
     });
 }
 
 function isValidTextNode(node) {
-    // Stricter filtering conditions for better performance
-    const skipTags = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'META', 'HEAD', 'TITLE', 'CODE', 'PRE'];
+    // Relax filtering conditions
+    const skipTags = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'META', 'HEAD', 'TITLE'];
     const parent = node.parentElement;
     
     if (!parent || skipTags.includes(parent.tagName)) {
         return false;
     }
     
-    // Skip if already processed
-    if (parent.closest('.bionic-processed')) {
-        return false;
-    }
+    // Remove processed check as it may be too strict
+    // Skip if already processed - Comment out this check
+    // if (parent.closest('.bionic-processed')) {
+    //     return false;
+    // }
     
     const text = node.textContent.trim();
-    // Only process nodes containing sufficient text
-    return text.length > 10 && /[a-zA-Z]{3,}/.test(text);
+    // Reduce text length requirement, process as long as there are letters
+    return text.length > 3 && /[a-zA-Z]{2,}/.test(text);
 }
 
 // Asynchronous batch processing of text nodes
@@ -105,6 +105,11 @@ async function processTextNodesBatch(textNodes, startIndex = 0) {
         const textNode = textNodes[i];
         const parent = textNode.parentElement;
         if (!parent) continue;
+        
+        // Check if already processed
+        if (parent.querySelector('.bionic-processed')) {
+            continue;
+        }
         
         try {
             // Store original content
@@ -131,7 +136,7 @@ async function processTextNodesBatch(textNodes, startIndex = 0) {
     // If there are more nodes to process, continue with the next batch
     if (endIndex < textNodes.length) {
         // Give the browser time to handle other tasks
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise(resolve => setTimeout(resolve, 5)); // Reduce delay
         await processTextNodesBatch(textNodes, endIndex);
     }
 }
@@ -149,21 +154,32 @@ function applyBionicReading() {
         console.log('Starting optimized bionic reading application...');
         
         try {
-            // Quick check of page size, skip if too large
+            // Relax page size limit
             const pageText = document.body.textContent;
-            if (pageText.length > 500000) { // Skip pages with more than 500k characters
+            if (pageText.length > 1000000) { // Increased to 1M character limit
                 console.log('Page too large, skipping bionic reading');
                 isProcessing = false;
                 return;
             }
             
-            // More efficient text node collection
+            // More efficient text node collection - Use simpler traversal
             const walker = document.createTreeWalker(
                 document.body,
                 NodeFilter.SHOW_TEXT,
                 {
                     acceptNode: function(node) {
-                        return isValidTextNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+                        // Simplify validation logic
+                        const parent = node.parentElement;
+                        if (!parent) return NodeFilter.FILTER_SKIP;
+                        
+                        const skipTags = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'META', 'HEAD', 'TITLE'];
+                        if (skipTags.includes(parent.tagName)) {
+                            return NodeFilter.FILTER_SKIP;
+                        }
+                        
+                        const text = node.textContent.trim();
+                        return (text.length > 3 && /[a-zA-Z]{2,}/.test(text)) ? 
+                               NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
                     }
                 }
             );
@@ -192,7 +208,7 @@ function applyBionicReading() {
         } finally {
             isProcessing = false;
         }
-    }, 100); // 100ms delay to avoid frequent triggers
+    }, 50); // Reduce delay to 50ms
 }
 
 function removeBionicReading() {
@@ -208,7 +224,6 @@ function removeBionicReading() {
     
     try {
         // Batch restore original content
-        const fragment = document.createDocumentFragment();
         originalContent.forEach((data, nodeId) => {
             const element = data.element;
             if (element && element.parentNode) {
@@ -242,7 +257,7 @@ function updateColorSettings(settings) {
         processingTimeout = setTimeout(() => {
             removeBionicReading();
             applyBionicReading();
-        }, 200); // 200ms delay
+        }, 100); // Reduce delay
     }
 }
 
@@ -290,7 +305,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                         bionicApplied: bionicApplied,
                         isProcessing: isProcessing 
                     });
-                }, 150);
+                }, 100); // Reduce delay
                 
                 return true; // Indicates asynchronous response
                 
@@ -313,15 +328,14 @@ function initializeBionicReading() {
     // Avoid running on special pages
     if (location.href.startsWith('chrome://') || 
         location.href.startsWith('edge://') || 
-        location.href.startsWith('about:') ||
-        document.body.textContent.length > 1000000) { // Skip pages with more than 1M characters
+        location.href.startsWith('about:')) {
         return;
     }
     
     chrome.storage.sync.get(['bionicEnabled'], function(result) {
         if (result.bionicEnabled && !isProcessing) {
-            // Delayed application, let page load completely
-            setTimeout(applyBionicReading, 500);
+            // Reduce delay, apply immediately after page load
+            setTimeout(applyBionicReading, 200);
         }
     });
 }
@@ -331,5 +345,5 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeBionicReading);
 } else {
     // Page has already loaded
-    setTimeout(initializeBionicReading, 100);
+    setTimeout(initializeBionicReading, 50);
 }
