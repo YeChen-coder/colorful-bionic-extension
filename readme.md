@@ -14,7 +14,7 @@ Colorful Bionic Reading transforms any webpage by highlighting the first part of
 - Single Color - Choose one consistent color for focus
 - Custom Palette - Create your own collection of up to 8 colors
 
-⚙️ **Complete Customization:** - 字体放大啊，缩小啊，加u啊，这个那个的，反正就是根据自己怎么看顺眼怎么调
+⚙️ **Complete Customization:** - 字体放大啊，缩小啊，加粗啊，这个那个的，反正对文字的一些操作选项都给了，大家自己怎么看顺眼怎么调
 - Font Size Control (80% - 150%)
 - Bold Weight Selection (6 levels from normal to ultra-bold)
 - Color Intensity Adjustment (30% - 100%)
