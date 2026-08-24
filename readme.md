@@ -14,9 +14,8 @@
 这就导致我在生活中不断遇到困难、自然而然地想出 idea 并用技术解决它，但解决完之后又觉得它的含金量就那么一点，完全不值得当作一个积累发布出来。我自认是处于开发者和一个产品经理之间的一个角色，但是我在这两件事情上都是个半吊子。这个定位并不能保证说把二者的优势都发挥出来，但是可以肯定的是，它一定是会让二者的劣势互相叠加、互相攻击的。
 
 正因如此，反馈对我真的很重要。就拿这个项目来说，虽然我觉得它非常一般，技术上很常规，界面很AI，但既然它能真实地帮助到其他人（哪怕只是帮大家节省一些 Token），我还是想把它以及之前做过的一些小东西发布出来。哪怕只是从给大家提供更多选择的角度来看，我也会觉得做这些事情是有意义的。
-真的很感谢给我发邮件的人，谢谢你。
 
-Colorful Bionic Reading transforms any webpage by highlighting the first part of each word in vibrant colors, helping you read faster with better comprehension and less eye strain.
+真的很感谢给我发邮件的人，谢谢你。
 
 🌈 **Three Color Modes:** - 三种模式，随便选颜色
 - Rainbow Mode - Cycles through 6 vibrant colors automatically
