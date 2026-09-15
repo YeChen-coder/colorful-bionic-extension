@@ -13,9 +13,11 @@
             <p>Make reading faster and more fun</p>
         </div>
         
+        <p id="saveStatus" class="save-status" role="status" aria-live="polite">Loading settings…</p>
+        <fieldset id="controls" disabled>
         <div class="main-toggle">
             <label class="toggle-switch">
-                <input type="checkbox" id="bionicEnabled">
+                <input type="checkbox" id="bionicEnabled" aria-label="Enable Colorful Bionic Reading">
                 <span class="slider"></span>
             </label>
             <span class="toggle-label">Enable Colorful Bionic Reading</span>
@@ -56,14 +58,14 @@
             <div class="setting-group">
                 <label>Color Mode</label>
                 <div class="color-mode-tabs">
-                    <button class="mode-tab active" data-mode="rainbow">🌈 Rainbow</button>
-                    <button class="mode-tab" data-mode="single">🎨 Single</button>
+                    <button class="mode-tab active" data-mode="single" aria-pressed="true">🎨 Single</button>
+                    <button class="mode-tab" data-mode="rainbow" aria-pressed="false">🌈 Rainbow</button>
                     <button class="mode-tab" data-mode="custom">✨ Custom</button>
                 </div>
             </div>
             
             <!-- Single Color Picker -->
-            <div class="setting-group color-setting" id="singleColorSetting" style="display: none;">
+            <div class="setting-group color-setting" id="singleColorSetting">
                 <label for="singleColor">Choose Color</label>
                 <div class="color-input-wrapper">
                     <input type="color" id="singleColor" value="#3366ff">
@@ -72,7 +74,7 @@
             </div>
             
             <!-- Custom Colors Setting -->
-            <div class="setting-group color-setting" id="customColorSetting" style="display: none;">
+            <div class="setting-group color-setting" id="customColorSetting" hidden>
                 <label>Custom Color Palette</label>
                 <div class="color-palette" id="customColorPalette">
                     <!-- Will be populated by JavaScript -->
@@ -101,10 +103,13 @@
         
         <div class="footer">
             <button class="reset-btn" id="resetBtn">Reset to Default</button>
-            <div class="version">v1.0.0</div>
+            <div class="version" id="version"></div>
         </div>
+        </fieldset>
     </div>
     
+    <script src="settings.js"></script>
+    <script src="renderer.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

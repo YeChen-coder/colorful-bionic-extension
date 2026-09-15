@@ -1,118 +1,15 @@
-/* Colorful Bionic Reading Styles for Web Pages - Improved Version */
-
-/* Base bionic reading styles */
-.bionic-processed {
+/* Scope page styles to elements owned by this extension. */
+[data-colorful-bionic] {
     display: contents !important;
 }
 
-.bionic-bold {
-    font-weight: bold !important;
-    transition: color 0.2s ease, font-size 0.2s ease;
+[data-colorful-bionic] > .bionic-bold {
     display: inline !important;
-    /* Don't force inherit colors, let inline styles take effect */
-}
-
-.bionic-normal {
-    font-weight: inherit !important;
-    display: inline !important;
-}
-
-/* Ensure bionic text doesn't break layout */
-.bionic-processed, 
-.bionic-processed * {
-    display: inline !important;
-    line-height: inherit !important;
     font-family: inherit !important;
+    line-height: inherit !important;
+    vertical-align: baseline !important;
     margin: 0 !important;
     padding: 0 !important;
-    border: none !important;
+    border: 0 !important;
     background: transparent !important;
-}
-
-/* Prevent text selection issues */
-.bionic-processed {
-    user-select: text !important;
-    -webkit-user-select: text !important;
-    -moz-user-select: text !important;
-    -ms-user-select: text !important;
-}
-
-/* Ensure font size changes don't break line height */
-.bionic-bold {
-    vertical-align: baseline !important;
-    line-height: 1 !important;
-}
-
-/* Increase style priority to override website styles */
-body .bionic-bold {
-    font-weight: bold !important;
-}
-
-/* Target common text containers */
-p .bionic-processed,
-div .bionic-processed,
-span .bionic-processed,
-h1 .bionic-processed,
-h2 .bionic-processed,
-h3 .bionic-processed,
-h4 .bionic-processed,
-h5 .bionic-processed,
-h6 .bionic-processed,
-li .bionic-processed,
-td .bionic-processed,
-th .bionic-processed,
-article .bionic-processed,
-section .bionic-processed {
-    display: contents !important;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    .bionic-bold {
-        filter: brightness(0.8) !important;
-        font-weight: 900 !important;
-    }
-}
-
-/* Reduced motion mode support */
-@media (prefers-reduced-motion: reduce) {
-    .bionic-bold {
-        transition: none !important;
-    }
-}
-
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-    .bionic-bold {
-        filter: brightness(1.2) saturate(1.1) !important;
-    }
-}
-
-/* Print styles */
-@media print {
-    .bionic-bold {
-        color: #000000 !important;
-        font-weight: bold !important;
-        font-size: 1em !important;
-        text-shadow: none !important;
-        filter: none !important;
-    }
-    
-    .bionic-normal {
-        color: #000000 !important;
-    }
-}
-
-/* Ensure correct display on any website */
-* .bionic-processed {
-    display: contents !important;
-}
-
-* .bionic-bold {
-    display: inline !important;
-    font-weight: bold !important;
-}
-
-* .bionic-normal {
-    display: inline !important;
 }

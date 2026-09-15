@@ -105,8 +105,7 @@ body {
 }
 
 .settings-panel.disabled {
-    opacity: 0.5;
-    pointer-events: none;
+    opacity: 0.8;
 }
 
 .setting-group {
@@ -249,7 +248,9 @@ body {
     font-size: 12px;
     line-height: 1;
     cursor: pointer;
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .color-item:hover .remove-color {
@@ -349,4 +350,35 @@ body {
 /* Animation for settings panel */
 .settings-panel {
     transition: all 0.3s ease;
+}
+
+fieldset {
+    border: 0;
+    min-width: 0;
+}
+
+.save-status {
+    padding: 10px 16px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #495057;
+    background: #f8f9fa;
+}
+
+.save-status[data-state="error"] {
+    color: #a51d2d;
+}
+
+button:focus-visible, input:focus-visible, .toggle-switch:focus-within .slider {
+    outline: 2px solid #3366ff;
+    outline-offset: 3px;
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before { transition: none !important; }
 }
