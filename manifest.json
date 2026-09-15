@@ -1,25 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Colorful Bionic Reading",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Enhanced bionic reading with customizable colors to improve reading speed and comprehension",
-  "permissions": [
-    "storage",
-    "activeTab",
-    "scripting",
-    "tabs"
-  ],
-  "host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ],
-  "background": {
-    "service_worker": "background.js"
-  },
+  "permissions": ["storage"],
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["content.js"],
+      "js": ["settings.js", "renderer.js", "content.js"],
       "css": ["bionic.css"],
       "run_at": "document_end"
     }
@@ -27,11 +15,5 @@
   "action": {
     "default_popup": "popup.html",
     "default_title": "Colorful Bionic Reading"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["bionic.css"],
-      "matches": ["http://*/*", "https://*/*"]
-    }
-  ]
+  }
 }

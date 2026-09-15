@@ -1,349 +1,159 @@
-// Content script for Colorful Bionic Reading - Fixed Version
-let bionicApplied = false;
-let currentSettings = {
-    boldRatio: 50,
-    fontSize: 110,
-    fontWeight: 700,
-    colorMode: 'rainbow',
-    singleColor: '#3366ff',
-    customColors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'],
-    rainbowColors: ['#ff6b6b', '#ffa726', '#66bb6a', '#42a5f5', '#ab47bc', '#ef5350'],
-    colorIntensity: 70
-};
+(() => {
+    if (globalThis.__colorfulBionicLoaded) return;
+    globalThis.__colorfulBionicLoaded = true;
 
-// Store original text content for restoration
-let originalContent = new Map();
-let colorIndex = 0;
-let processingTimeout = null;
-let isProcessing = false;
+    const excluded = 'script, style, noscript, textarea, input, select, option, button, code, pre, kbd, samp, svg, math, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [hidden], [inert]';
+    const wrapperSelector = '[data-colorful-bionic]';
+    const originals = new Map();
+    const roots = new Set();
+    const colorState = { colorIndex: 0 };
+    let settings;
+    let timer;
+    let walker;
+    let rootText;
+    let revision = 0;
+    let disposed = false;
 
-// Performance optimization constants - Adjust these values to improve coverage
-const MAX_TEXT_NODES = 2000; // Increased to 2000 nodes
-const MIN_WORD_LENGTH = 2; // Reduced to 2 characters
-const BATCH_SIZE = 100; // Increased batch size
-
-function getNextColor() {
-    let colors;
-    switch (currentSettings.colorMode) {
-        case 'single':
-            return currentSettings.singleColor;
-        case 'custom':
-            colors = currentSettings.customColors;
-            if (!colors || colors.length === 0) {
-                colors = currentSettings.rainbowColors;
-            }
-            break;
-        case 'rainbow':
-        default:
-            colors = currentSettings.rainbowColors;
-            break;
+    function eligible(node) {
+        const parent = node.parentElement;
+        return node.isConnected && parent && parent.namespaceURI === 'http://www.w3.org/1999/xhtml' &&
+            !parent.closest(`${excluded}, ${wrapperSelector}`) && BionicRenderer.hasWords(node.data);
     }
-    
-    const color = colors[colorIndex % colors.length];
-    colorIndex++;
-    return color;
-}
 
-function hexToRgba(hex, alpha = 1) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (!result) return `rgba(0,0,0,${alpha})`;
-    
-    const r = parseInt(result[1], 16);
-    const g = parseInt(result[2], 16);
-    const b = parseInt(result[3], 16);
-    
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-function applyBionicToWord(word) {
-    if (!word || word.length < MIN_WORD_LENGTH) return word;
-    
-    const boldLength = Math.ceil(word.length * (currentSettings.boldRatio / 100));
-    const boldPart = word.substring(0, boldLength);
-    const normalPart = word.substring(boldLength);
-    
-    const color = getNextColor();
-    const alpha = currentSettings.colorIntensity / 100;
-    const fontSize = (currentSettings.fontSize || 110) / 100;
-    const fontWeight = currentSettings.fontWeight || 700;
-    
-    return `<span class="bionic-bold" style="color: ${hexToRgba(color, alpha)}; font-size: ${fontSize}em; font-weight: ${fontWeight};">${boldPart}</span><span class="bionic-normal">${normalPart}</span>`;
-}
-
-function processBionicText(text) {
-    // Process more types of words, including shorter words
-    return text.replace(/\b[a-zA-Z0-9]{2,}\b/g, function(word) {
-        return applyBionicToWord(word);
-    });
-}
-
-function isValidTextNode(node) {
-    // Relax filtering conditions
-    const skipTags = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'META', 'HEAD', 'TITLE'];
-    const parent = node.parentElement;
-    
-    if (!parent || skipTags.includes(parent.tagName)) {
-        return false;
-    }
-    
-    // Remove processed check as it may be too strict
-    // Skip if already processed - Comment out this check
-    // if (parent.closest('.bionic-processed')) {
-    //     return false;
-    // }
-    
-    const text = node.textContent.trim();
-    // Reduce text length requirement, process as long as there are letters
-    return text.length > 3 && /[a-zA-Z]{2,}/.test(text);
-}
-
-// Asynchronous batch processing of text nodes
-async function processTextNodesBatch(textNodes, startIndex = 0) {
-    const endIndex = Math.min(startIndex + BATCH_SIZE, textNodes.length);
-    
-    for (let i = startIndex; i < endIndex; i++) {
-        const textNode = textNodes[i];
-        const parent = textNode.parentElement;
-        if (!parent) continue;
-        
-        // Check if already processed
-        if (parent.querySelector('.bionic-processed')) {
-            continue;
+    function restore(wrapper, original) {
+        if (wrapper.parentNode) {
+            // Preserve text changed by the site while the extension was active.
+            original.data = wrapper.textContent;
+            wrapper.replaceWith(original);
         }
-        
-        try {
-            // Store original content
-            const nodeId = Math.random().toString(36).substring(2);
-            originalContent.set(nodeId, {
-                element: parent,
-                originalHTML: parent.innerHTML
-            });
-            
-            // Apply bionic reading
-            const bionicHTML = processBionicText(textNode.textContent);
-            const span = document.createElement('span');
-            span.innerHTML = bionicHTML;
-            span.className = 'bionic-processed';
-            span.setAttribute('data-original-id', nodeId);
-            
-            // Replace text node with processed span
-            parent.replaceChild(span, textNode);
-        } catch (error) {
-            console.warn('Error processing text node:', error);
-        }
+        originals.delete(wrapper);
     }
-    
-    // If there are more nodes to process, continue with the next batch
-    if (endIndex < textNodes.length) {
-        // Give the browser time to handle other tasks
-        await new Promise(resolve => setTimeout(resolve, 5)); // Reduce delay
-        await processTextNodesBatch(textNodes, endIndex);
-    }
-}
 
-function applyBionicReading() {
-    if (bionicApplied || isProcessing) return;
-    
-    // Prevent duplicate processing
-    if (processingTimeout) {
-        clearTimeout(processingTimeout);
-    }
-    
-    processingTimeout = setTimeout(async () => {
-        isProcessing = true;
-        console.log('Starting optimized bionic reading application...');
-        
-        try {
-            // Relax page size limit
-            const pageText = document.body.textContent;
-            if (pageText.length > 1000000) { // Increased to 1M character limit
-                console.log('Page too large, skipping bionic reading');
-                isProcessing = false;
-                return;
-            }
-            
-            // More efficient text node collection - Use simpler traversal
-            const walker = document.createTreeWalker(
-                document.body,
-                NodeFilter.SHOW_TEXT,
-                {
-                    acceptNode: function(node) {
-                        // Simplify validation logic
-                        const parent = node.parentElement;
-                        if (!parent) return NodeFilter.FILTER_SKIP;
-                        
-                        const skipTags = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'META', 'HEAD', 'TITLE'];
-                        if (skipTags.includes(parent.tagName)) {
-                            return NodeFilter.FILTER_SKIP;
-                        }
-                        
-                        const text = node.textContent.trim();
-                        return (text.length > 3 && /[a-zA-Z]{2,}/.test(text)) ? 
-                               NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-                    }
-                }
-            );
-            
-            const textNodes = [];
-            let node;
-            let nodeCount = 0;
-            
-            while ((node = walker.nextNode()) && nodeCount < MAX_TEXT_NODES) {
-                textNodes.push(node);
-                nodeCount++;
-            }
-            
-            console.log(`Processing ${textNodes.length} text nodes...`);
-            
-            // Reset color index
-            colorIndex = 0;
-            
-            // Asynchronous batch processing
-            await processTextNodesBatch(textNodes);
-            
-            bionicApplied = true;
-            console.log('Colorful Bionic Reading applied successfully');
-        } catch (error) {
-            console.error('Error applying bionic reading:', error);
-        } finally {
-            isProcessing = false;
-        }
-    }, 50); // Reduce delay to 50ms
-}
-
-function removeBionicReading() {
-    if (!bionicApplied) return;
-    
-    console.log('Removing bionic reading...');
-    
-    // Clear processing timeout
-    if (processingTimeout) {
-        clearTimeout(processingTimeout);
-        processingTimeout = null;
-    }
-    
-    try {
-        // Batch restore original content
-        originalContent.forEach((data, nodeId) => {
-            const element = data.element;
-            if (element && element.parentNode) {
-                element.innerHTML = data.originalHTML;
-            }
-        });
-        
-        originalContent.clear();
-        bionicApplied = false;
-        isProcessing = false;
-        colorIndex = 0;
-        console.log('Colorful Bionic Reading removed');
-    } catch (error) {
-        console.error('Error removing bionic reading:', error);
-        // Force clear state
-        originalContent.clear();
-        bionicApplied = false;
-        isProcessing = false;
-    }
-}
-
-function updateColorSettings(settings) {
-    currentSettings = { ...currentSettings, ...settings };
-    
-    // Throttled update - avoid frequent re-application
-    if (processingTimeout) {
-        clearTimeout(processingTimeout);
-    }
-    
-    if (bionicApplied) {
-        processingTimeout = setTimeout(() => {
-            removeBionicReading();
-            applyBionicReading();
-        }, 100); // Reduce delay
-    }
-}
-
-// Listen for messages from background script
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    try {
-        switch(request.action) {
-            case 'checkStatus':
-                sendResponse({ 
-                    bionicApplied: bionicApplied,
-                    isProcessing: isProcessing,
-                    nodeCount: originalContent.size
+    function collectMutations(records) {
+        for (const record of records) {
+            const parent = record.target.nodeType === Node.ELEMENT_NODE ? record.target : record.target.parentElement;
+            const wrapper = parent?.closest(wrapperSelector);
+            if (wrapper && originals.has(wrapper)) {
+                const container = wrapper.parentNode;
+                restore(wrapper, originals.get(wrapper));
+                if (container) roots.add(container);
+            } else if (record.type === 'characterData') {
+                roots.add(record.target);
+            } else {
+                // If a site removes the walker's current node between batches,
+                // revisit its container so later siblings are still reached.
+                if (record.removedNodes.length) roots.add(record.target);
+                record.addedNodes.forEach(node => {
+                    if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.ELEMENT_NODE) roots.add(node);
                 });
-                break;
-                
-            case 'toggleBionic':
-                // Update settings
-                currentSettings = {
-                    boldRatio: request.boldRatio || 50,
-                    fontSize: request.fontSize || 110,
-                    fontWeight: request.fontWeight || 700,
-                    colorMode: request.colorMode || 'rainbow',
-                    singleColor: request.singleColor || '#3366ff',
-                    customColors: request.customColors || currentSettings.customColors,
-                    rainbowColors: request.rainbowColors || currentSettings.rainbowColors,
-                    colorIntensity: request.colorIntensity || 70
-                };
-                
-                console.log('Updated settings:', currentSettings);
-                
-                // Debounce handling
-                if (processingTimeout) {
-                    clearTimeout(processingTimeout);
-                }
-                
-                processingTimeout = setTimeout(() => {
-                    if (request.enabled && !isProcessing) {
-                        applyBionicReading();
-                    } else if (!request.enabled) {
-                        removeBionicReading();
-                    }
-                    
-                    sendResponse({ 
-                        success: true, 
-                        bionicApplied: bionicApplied,
-                        isProcessing: isProcessing 
-                    });
-                }, 100); // Reduce delay
-                
-                return true; // Indicates asynchronous response
-                
-            case 'updateColorSettings':
-                updateColorSettings(request);
-                sendResponse({ success: true });
-                break;
-                
-            default:
-                sendResponse({ error: 'Unknown action' });
+            }
         }
-    } catch (error) {
-        console.error('Error handling message:', error);
-        sendResponse({ error: error.message });
+        for (const wrapper of originals.keys()) {
+            if (!wrapper.isConnected) originals.delete(wrapper);
+        }
     }
-});
 
-// Optimized auto-apply logic
-function initializeBionicReading() {
-    // Avoid running on special pages
-    if (location.href.startsWith('chrome://') || 
-        location.href.startsWith('edge://') || 
-        location.href.startsWith('about:')) {
-        return;
-    }
-    
-    chrome.storage.sync.get(['bionicEnabled'], function(result) {
-        if (result.bionicEnabled && !isProcessing) {
-            // Reduce delay, apply immediately after page load
-            setTimeout(applyBionicReading, 200);
-        }
+    const observer = new MutationObserver(records => {
+        observer.disconnect();
+        collectMutations(records);
+        observe();
+        schedule();
     });
-}
 
-// Initialize after page load
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeBionicReading);
-} else {
-    // Page has already loaded
-    setTimeout(initializeBionicReading, 50);
-}
+    function observe() {
+        if (settings?.bionicEnabled && document.body) {
+            observer.observe(document.body, { childList: true, characterData: true, subtree: true });
+        }
+    }
+
+    function schedule() {
+        if (!timer && settings?.bionicEnabled && (roots.size || walker || rootText)) {
+            timer = setTimeout(processBatch, 16);
+        }
+    }
+
+    function nextNode() {
+        while (true) {
+            if (rootText) {
+                const node = rootText;
+                rootText = null;
+                return node;
+            }
+            if (walker) {
+                const node = walker.nextNode();
+                if (node) return node;
+                walker = null;
+            }
+            if (!roots.size) return null;
+            const root = roots.values().next().value;
+            roots.delete(root);
+            if (!root.isConnected) continue;
+            if (root.nodeType === Node.TEXT_NODE) rootText = root;
+            else walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                acceptNode: node => eligible(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+            });
+        }
+    }
+
+    function processBatch() {
+        timer = null;
+        collectMutations(observer.takeRecords());
+        observer.disconnect();
+        // Gather before replacing text so traversal cannot descend into our spans.
+        const batch = [];
+        const started = performance.now();
+        let node;
+        while (batch.length < 80 && performance.now() - started < 8 && (node = nextNode())) {
+            if (eligible(node)) batch.push(node);
+        }
+        for (const text of batch) {
+            if (!eligible(text)) continue;
+            const wrapper = document.createElement('span');
+            wrapper.className = 'bionic-processed';
+            wrapper.dataset.colorfulBionic = '';
+            wrapper.append(BionicRenderer.fragment(document, text.data, settings, colorState));
+            if (walker?.currentNode === text) walker.currentNode = wrapper;
+            text.replaceWith(wrapper);
+            originals.set(wrapper, text);
+        }
+        observe();
+        schedule();
+    }
+
+    function apply(value) {
+        revision++;
+        const next = BionicSettings.normalize(value);
+        if (JSON.stringify(next) === JSON.stringify(settings)) return;
+        settings = next;
+        clearTimeout(timer);
+        timer = null;
+        observer.disconnect();
+        walker = null;
+        rootText = null;
+        roots.clear();
+        for (const [wrapper, original] of originals) restore(wrapper, original);
+        colorState.colorIndex = 0;
+        if (settings.bionicEnabled && document.body) roots.add(document.body);
+        observe();
+        schedule();
+    }
+
+    function settingsChanged(changes, area) {
+        if (area === 'local' && changes.settings) apply(changes.settings.newValue);
+    }
+    chrome.storage.onChanged.addListener(settingsChanged);
+    window.addEventListener('pagehide', event => {
+        if (event.persisted) return; // Back/forward cache keeps this page alive.
+        disposed = true;
+        clearTimeout(timer);
+        observer.disconnect();
+        chrome.storage.onChanged.removeListener(settingsChanged);
+        originals.clear();
+        roots.clear();
+    });
+
+    const initialRevision = revision;
+    BionicSettings.load().then(value => {
+        if (!disposed && revision === initialRevision) apply(value);
+    }).catch(error => console.error('Unable to load Colorful Bionic settings:', error));
+})();
