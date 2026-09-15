@@ -1,4 +1,4 @@
-可以从 Edge 的 Extension Store 去下载。这样起码过了平台的检测，大家用起来也放心一点。下载链接：https://microsoftedge.microsoft.com/addons/detail/colorful-bionic-reading/camgbnhlhdempnekobebpmdhechifjni
+可以从 Edge 的 Extension Store 去下载。这样起码过了平台的检测，大家用起来也放心一点。下载链接：https://microsoftedge.microsoft.com/addons/detail/colorful-bionic-reading/camgbnhlhdempnekobebpmdhechifjni -2026 年 9 月 14 日补充：更新了一下，把之前那个设置 default 不行的 bug 改了。另外，也把原来那个一进去就是五颜六色的页面改了，还是尽可能不要太一下子太 OP 了。现在进去，看到的是单色的。更新的包刚传到 Microsoft Add-on Platform 去做审核了，等审核完就能看到了。
 
 这个插件是给患有 ADHD 的阅读者使用的，主要通过对文字改颜色、突出和放大，来提升阅读速度与注意力。因为我也不知道什么样的颜色搭配最合适，而且最适合自己的阅读样式还是自己调更自由，所以我尽可能把所有选项都放上去了：无论是单色、七八九十种颜色，还是你想自由组合两三种颜色都行，字体放大加粗都能调，使用者可以根据自己的喜好随意设置。不登陆，不联网，仅装在自己浏览器上，开箱即用。
 对于类似维基百科那种满篇全是文字的页面，插件需要处理较多 DOM 文本节点。1.1.0 改为分批处理，并支持动态加载的正文；特别长的页面仍可能需要等待一会儿。
